@@ -15,7 +15,7 @@
     </params>
 </plugin>
 """
-import Domoticz,datetime,json,pluginConfig
+import Domoticz,datetime,json,pluginConfig,time
 # from data import * #Pour le debug local sinon à mettre en commentaire
 import maginon
 
@@ -51,7 +51,7 @@ class SmartPlugMaginonPlugin:
             m = maginon.Smartplug(self._ip)
             if(m.read()== "Success"):
                 v_json = m.getInfo()
-                Domoticz.Log(json.dumps(v_json))
+                Domoticz.Debug(json.dumps(v_json))
                 v_sValue = str(v_json["puissance"])+";"+str(v_json["compteur"])
                 self.updateDeviceIfExist(pluginConfig.pluginConfig.DeviceType.devicePuissance,str(self._ip),0,v_sValue)
                 self.updateDeviceIfExist(pluginConfig.pluginConfig.DeviceType.deviceCommande,str(self._ip),int(v_json["etat"]),str(v_json["etat"]))
@@ -59,7 +59,7 @@ class SmartPlugMaginonPlugin:
                 Domoticz.Error("Erreur : A la mise à jour. Vérifier la prise ou l'adresse IP.")
 
     def onStart(self):
-        Domoticz.Log("onStart called")
+        Domoticz.Debug("onStart called")
         if Parameters["Mode6"] == "Debug":
             Domoticz.Debugging(1)
         self._ip = Parameters["Address"]
@@ -97,18 +97,22 @@ class SmartPlugMaginonPlugin:
         Domoticz.Log("onMessage called")
 
     def onCommand(self, Unit, Command, Level, Hue):
-        Domoticz.Log("onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
+        Domoticz.Debug("onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
         # 2018-04-15 21:40:52.237 (SmartplugSalon) onCommand called for Unit 8: Parameter 'On', Level: 0
         # 2018-04-15 21:43:52.061 (SmartplugSalon) onCommand called for Unit 8: Parameter 'Off', Level: 0
         m = maginon.Smartplug(self._ip)
         if(str(Command) == "Off"):
             if(m.stop() == "Success"):
                 self.updateDeviceIfExist(pluginConfig.pluginConfig.DeviceType.deviceCommande,str(self._ip),0,"0")
+                time.sleep(2)
+                self.updateSmartplugDevice()
             else:
                 Domoticz.Error("Erreur : "+"onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
         else:
             if(m.start() == "Success"):
                 self.updateDeviceIfExist(pluginConfig.pluginConfig.DeviceType.deviceCommande,str(self._ip),1,"1")
+                time.sleep(2)
+                self.updateSmartplugDevice()
             else:
                 Domoticz.Error("Erreur : "+"onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
 
@@ -119,7 +123,7 @@ class SmartPlugMaginonPlugin:
         Domoticz.Log("onDisconnect called")
 
     def onHeartbeat(self):
-        Domoticz.Log("onHeartbeat called")
+        Domoticz.Debug("onHeartbeat called")
         if self._lastExecution.minute == datetime.datetime.now().minute :
             return        
         self._lastExecution = datetime.datetime.now()
