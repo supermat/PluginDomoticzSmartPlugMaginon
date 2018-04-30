@@ -1,4 +1,4 @@
-# Domoticz Freebox Plugin
+# Domoticz Samrtplug Maginon Plugin
 Plugin Python Domoticz pour l'utilisation d'un prise intelligente wifi Maginon
 https://matdomotique.wordpress.com/2018/04/30/plugin-smartplug-maginon-pour-domoticz/
 
